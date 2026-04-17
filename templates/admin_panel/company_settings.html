@@ -1,0 +1,372 @@
+{% extends 'general/base.html' %}
+{% block title %}Company Settings - Chargebee{% endblock %}
+
+{% block content %}
+<h2 class="text-xl font-bold mb-4 pb-2 border-b border-gray-300 page-header-sticky"><i class="fas fa-building mr-2"></i>Company Settings</h2>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <!-- Left: Form Section -->
+    <div class="lg:col-span-2">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="bg-white border border-gray-300 p-5 shadow-sm rounded-xl max-h-[calc(100vh-160px)] overflow-y-auto mb-2">
+            <!-- Form starts -->
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Company Name <span class="text-red-500">*</span></label>
+                <input type="text" name="name" value="{{ company.name }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Address <span class="text-red-500">*</span></label>
+                <textarea name="address" rows="2" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" required>{{ company.address }}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Phone <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone" value="{{ company.phone }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" value="{{ company.email }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" required>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Owner Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="owner_name" value="{{ company.owner_name }}" class="w-full border border-gray-400 px-3 py-1.5" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Business Type</label>
+                    <select name="company_type" class="w-full border border-gray-400 px-3 py-1.5">
+                        <option value="">Select Business Type</option>
+                        <option value="electrical" {% if company.company_type == 'electrical' %}selected{% endif %}>Electrical Shop</option>
+                        <option value="computer" {% if company.company_type == 'computer' %}selected{% endif %}>Computer & IT</option>
+                        <option value="garage" {% if company.company_type == 'garage' %}selected{% endif %}>Auto Garage</option>
+                        <option value="medical" {% if company.company_type == 'medical' %}selected{% endif %}>Medical/Pharmacy</option>
+                        <option value="restaurant" {% if company.company_type == 'restaurant' %}selected{% endif %}>Restaurant/Cafe</option>
+                        <option value="fashion" {% if company.company_type == 'fashion' %}selected{% endif %}>Clothing/Fashion</option>
+                        <option value="grocery" {% if company.company_type == 'grocery' %}selected{% endif %}>Grocery Store</option>
+                        <option value="hardware" {% if company.company_type == 'hardware' %}selected{% endif %}>Hardware Store</option>
+                        <option value="stationery" {% if company.company_type == 'stationery' %}selected{% endif %}>Stationery/Office</option>
+                        <option value="beauty" {% if company.company_type == 'beauty' %}selected{% endif %}>Beauty/Salon</option>
+                        <option value="sports" {% if company.company_type == 'sports' %}selected{% endif %}>Sports/Fitness</option>
+                        <option value="jewelry" {% if company.company_type == 'jewelry' %}selected{% endif %}>Jewelry Shop</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">This helps auto-populate products based on your business type.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Tax ID / GSTIN</label>
+                    <input type="text" name="tax_id" value="{{ company.tax_id }}" class="w-full border border-gray-400 px-3 py-1.5">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">PAN Number</label>
+                    <input type="text" name="pan_number" value="{{ company.pan_number }}" class="w-full border border-gray-400 px-3 py-1.5">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">State</label>
+                    <input type="text" name="state" value="{{ company.state }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">City</label>
+                    <input type="text" name="city" value="{{ company.city }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Pincode</label>
+                    <input type="text" name="pincode" value="{{ company.pincode }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Website</label>
+                <input type="url" name="website" value="{{ company.website }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Company Logo</label>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <input type="file" name="logo" id="logoInput" accept="image/*" class="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded p-1 w-full sm:w-auto">
+                    <span id="logoFileName" class="text-sm text-gray-700 truncate w-full sm:w-48">No file chosen</span>
+                    
+                    {% if company.logo %}
+                    <button type="button" id="removeLogoBtn" class="btn btn-sm btn-danger" onclick="toggleRemoveLogo()">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Remove</span>
+                    </button>
+                    {% endif %}
+                </div>
+                <!-- CSS to hide default browser filename text -->
+                <style>#logoInput::file-selector-button { margin-right: 0; } #logoInput { color: transparent; }</style>
+                <p class="text-xs text-gray-500 mt-1">Upload a square image (PNG, JPG) for best results.</p>
+                <input type="hidden" name="clear_logo" id="clearLogoInput" value="false">
+            </div>
+            
+            <h3 class="text-lg font-bold mt-6 mb-3 border-b border-gray-200 pb-1">Bank Details</h3>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ company.bank_name }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Account Number</label>
+                    <input type="text" name="account_number" value="{{ company.account_number }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="block text-sm font-bold mb-1">IFSC Code</label>
+                    <input type="text" name="ifsc_code" value="{{ company.ifsc_code }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">SWIFT Code</label>
+                    <input type="text" name="swift_code" value="{{ company.swift_code }}" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg">
+                </div>
+            </div>
+            
+            <h3 class="text-lg font-bold mt-6 mb-3 border-b border-gray-200 pb-1">Footer & Notes</h3>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Invoice Footer Text</label>
+                <textarea name="footer_text" rows="3" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" placeholder="e.g. Thank you for your business!">{{ company.footer_text }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Terms & Conditions (Default)</label>
+                <textarea name="terms_and_conditions" rows="4" class="w-full border border-gray-400 px-3 py-1.5 rounded-lg" placeholder="Default terms for all new invoices...">{{ company.terms_and_conditions }}</textarea>
+                <p class="text-xs text-gray-500 mt-1">These terms will appear on all new invoices automatically.</p>
+            </div>
+            
+            </div> <!-- End of white container -->
+            
+            <div class="flex items-center justify-end gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
+                <button type="button" onclick="confirmReset()" class="btn btn-danger">
+                    <i class="fas fa-undo"></i>
+                    <span>Reset All Settings</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Hidden Reset Form -->
+        <form id="resetForm" method="post" action="{% url 'company_settings_reset' %}" style="display:none;">
+            {% csrf_token %}
+        </form>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Live Preview: Text
+            const bindText = (n, id, fb = '') => {
+                const i = document.querySelector(`[name="${n}"]`);
+                if(i) i.addEventListener('input', e => document.getElementById(id).textContent = e.target.value || fb);
+            };
+            
+            // Live Preview: With container toggle
+            const bindCont = (n, id, cid) => {
+                const i = document.querySelector(`[name="${n}"]`);
+                const cont = document.getElementById(cid);
+                if(i && cont) {
+                    i.addEventListener('input', e => {
+                        document.getElementById(id).textContent = e.target.value;
+                        if(e.target.value.trim()) cont.classList.remove('hidden'); else cont.classList.add('hidden');
+                    });
+                }
+            };
+
+            bindText('name', 'previewName', 'Company Name');
+            bindText('phone', 'previewPhone', '');
+            bindText('email', 'previewEmail', '');
+            bindCont('owner_name', 'previewOwner', 'previewOwnerContainer');
+            bindCont('pan_number', 'previewPan', 'previewPanContainer');
+            bindCont('tax_id', 'previewTax', 'previewTaxContainer');
+
+            // Live Preview: Select Business Type
+            const ts = document.querySelector('[name="company_type"]');
+            if(ts) ts.addEventListener('change', e => document.getElementById('previewType').textContent = e.target.value ? ts.options[ts.selectedIndex].text : '');
+
+            // Live Preview: Location Assembly
+            const uLoc = () => {
+                const c = document.querySelector('[name="city"]').value; const s = document.querySelector('[name="state"]').value; const p = document.querySelector('[name="pincode"]').value;
+                const arr = []; if(c) arr.push(c); if(s) arr.push(s);
+                let loc = arr.join(', '); if(p) loc += (loc ? ' - ' : '') + p;
+                document.getElementById('previewLocation').textContent = loc;
+            };
+            ['city', 'state', 'pincode'].forEach(n => document.querySelector(`[name="${n}"]`).addEventListener('input', uLoc));
+
+            // Live Preview: Address (br tags)
+            const ad = document.querySelector('[name="address"]');
+            if(ad) ad.addEventListener('input', e => document.getElementById('previewAddress').innerHTML = (e.target.value || 'Address Line 1...').replace(/\n/g, '<br>'));
+
+            // Live Preview: Website
+            const wb = document.querySelector('[name="website"]');
+            if(wb) wb.addEventListener('input', e => {
+                const el = document.getElementById('previewWeb'), cont = document.getElementById('previewWebContainer');
+                el.textContent = el.href = e.target.value;
+                if(e.target.value.trim()) cont.classList.remove('hidden'); else cont.classList.add('hidden');
+            });
+
+            // Live Preview: Bank logic
+            const uBank = () => {
+                const b = document.querySelector('[name="bank_name"]').value, a = document.querySelector('[name="account_number"]').value, i = document.querySelector('[name="ifsc_code"]').value;
+                if(b || a || i) document.getElementById('previewBankContainer').classList.remove('hidden'); else document.getElementById('previewBankContainer').classList.add('hidden');
+            };
+            ['bank_name', 'account_number', 'ifsc_code'].forEach(n => document.querySelector(`[name="${n}"]`).addEventListener('input', e => {
+                document.getElementById(n === 'bank_name' ? 'previewBankName' : n === 'account_number' ? 'previewAccount' : 'previewIfsc').textContent = e.target.value; uBank();
+            }));
+
+            // Live Preview: Swift
+            const sw = document.querySelector('[name="swift_code"]');
+            if(sw) sw.addEventListener('input', e => {
+                document.getElementById('previewSwift').textContent = e.target.value;
+                if(e.target.value.trim()) { document.getElementById('previewSwiftLabel').classList.remove('hidden'); document.getElementById('previewSwift').classList.remove('hidden'); }
+                else { document.getElementById('previewSwiftLabel').classList.add('hidden'); document.getElementById('previewSwift').classList.add('hidden'); }
+            });
+        });
+
+        // Logo Logic
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const fileNameSpan = document.getElementById('logoFileName');
+            const clearLogoInput = document.getElementById('clearLogoInput');
+            const previewImg = document.getElementById('previewLogoImage');
+            const placeholder = document.getElementById('previewLogoPlaceholder');
+            
+            if (e.target.files && e.target.files.length > 0) {
+                fileNameSpan.textContent = e.target.files[0].name;
+                fileNameSpan.classList.remove('line-through', 'text-red-500');
+                if(clearLogoInput) clearLogoInput.value = 'false';
+
+                const r = new FileReader();
+                r.onload = function(ev) {
+                    if(previewImg) { previewImg.src = ev.target.result; previewImg.classList.remove('hidden'); }
+                    if(placeholder) placeholder.classList.add('hidden');
+                };
+                r.readAsDataURL(this.files[0]);
+            } else {
+                fileNameSpan.textContent = 'No file chosen';
+            }
+        });
+
+        function toggleRemoveLogo() {
+            const clearLogoInput = document.getElementById('clearLogoInput');
+            const fileNameSpan = document.getElementById('logoFileName');
+            const btn = document.getElementById('removeLogoBtn');
+            const logoInput = document.getElementById('logoInput');
+            const previewImg = document.getElementById('previewLogoImage');
+            const placeholder = document.getElementById('previewLogoPlaceholder');
+            
+            if (clearLogoInput.value === 'false') {
+                clearLogoInput.value = 'true';
+                fileNameSpan.textContent = "Logo will be removed";
+                fileNameSpan.classList.add('line-through', 'text-red-500');
+                btn.classList.replace('bg-red-50', 'bg-red-600');
+                btn.classList.replace('text-red-500', 'text-white');
+                btn.classList.replace('hover:bg-red-100', 'hover:bg-red-700');
+                btn.classList.replace('hover:text-red-700', 'hover:text-white');
+                btn.innerHTML = '<i class="fas fa-undo"></i> Undo';
+                logoInput.value = "";
+                
+                if(previewImg) previewImg.classList.add('hidden');
+                if(placeholder) placeholder.classList.remove('hidden');
+            } else {
+                clearLogoInput.value = 'false';
+                fileNameSpan.textContent = "No file chosen";
+                fileNameSpan.classList.remove('line-through', 'text-red-500');
+                btn.classList.replace('bg-red-600', 'bg-red-50');
+                btn.classList.replace('text-white', 'text-red-500');
+                btn.classList.replace('hover:bg-red-700', 'hover:bg-red-100');
+                btn.classList.replace('hover:text-white', 'hover:text-red-700');
+                btn.innerHTML = '<i class="fas fa-trash-alt"></i> Remove';
+
+                if(previewImg && previewImg.src && !previewImg.src.includes('undefined') && previewImg.src !== window.location.href) {
+                    previewImg.classList.remove('hidden');
+                    if(placeholder) placeholder.classList.add('hidden');
+                }
+            }
+        }
+
+        function confirmReset() {
+            showConfirm('⚠️ Are you sure you want to reset ALL company settings?\n\nThis will clear all company information, bank details, terms & conditions, and the logo.\n\nThis action cannot be undone.', () => {
+                document.getElementById('resetForm').submit();
+            });
+        }
+        </script>
+    </div>
+
+    <!-- Right: Preview Section -->
+    <div class="lg:col-span-1">
+        <div class="bg-gray-50 border border-gray-300 p-5 shadow-sm rounded-xl max-h-[calc(100vh-100px)] overflow-y-auto">
+            <h3 class="text-sm font-bold mb-4 pb-2 border-b border-gray-200 text-gray-500 uppercase tracking-wide">Company Preview</h3>
+            
+            <div class="mb-5 text-center">
+                <img id="previewLogoImage" src="{% if company.logo %}{{ company.logo.url }}{% endif %}" alt="Logo" class="h-16 mx-auto mb-3 object-contain {% if not company.logo %}hidden{% endif %}">
+                <div id="previewLogoPlaceholder" class="h-16 w-16 bg-gray-200 rounded-full mx-auto mb-3 flex items-center justify-center text-gray-400 shadow-inner {% if company.logo %}hidden{% endif %}">
+                    <span class="text-xs font-bold text-gray-500">LOGO</span>
+                </div>
+                <h4 id="previewName" class="text-xl font-bold text-gray-800 leading-tight">{{ company.name|default:"Company Name" }}</h4>
+                <div id="previewType" class="text-xs font-bold text-blue-600 uppercase tracking-wider mt-1 mb-1">{{ company.company_type }}</div>
+                <div id="previewOwnerContainer" class="text-xs text-gray-500 mb-1 {% if not company.owner_name %}hidden{% endif %}">Owner: <span id="previewOwner" class="font-medium text-gray-700">{{ company.owner_name }}</span></div>
+                <div class="text-sm text-gray-500 mt-1">
+                    <span id="previewAddress">{{ company.address|linebreaksbr|default:"Address Line 1..." }}</span><br>
+                    <span id="previewLocation">{% if company.city %}{{ company.city }}{% endif %}{% if company.state %}, {{ company.state }}{% endif %}{% if company.pincode %} - {{ company.pincode }}{% endif %}</span>
+                </div>
+            </div>
+            
+            <div class="space-y-3 text-sm">
+                <div id="previewPanContainer" class="flex justify-between border-b border-gray-200 pb-1 border-dashed {% if not company.pan_number %}hidden{% endif %}">
+                    <span class="text-gray-500">PAN No:</span>
+                    <span id="previewPan" class="font-medium text-gray-700">{{ company.pan_number }}</span>
+                </div>
+                <div id="previewTaxContainer" class="flex justify-between border-b border-gray-200 pb-1 border-dashed {% if not company.tax_id %}hidden{% endif %}">
+                    <span class="text-gray-500">Tax ID:</span>
+                    <span id="previewTax" class="font-medium text-gray-700">{{ company.tax_id }}</span>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-2 border-dashed">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-500">Phone:</span>
+                        <span id="previewPhone" class="font-medium text-gray-700">{{ company.phone }}</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <span class="text-gray-500">Email:</span>
+                        <span id="previewEmail" class="font-medium text-blue-600 break-all" title="{{ company.email }}">{{ company.email }}</span>
+                    </div>
+                    <div id="previewWebContainer" class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-1 {% if not company.website %}hidden{% endif %}">
+                        <span class="text-gray-500">Web:</span>
+                        <a id="previewWeb" href="{{ company.website }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ company.website }}</a>
+                    </div>
+                </div>
+
+                <div id="previewBankContainer" class="bg-white p-3 rounded border border-gray-200 shadow-sm mt-3 {% if not company.bank_name and not company.account_number and not company.ifsc_code %}hidden{% endif %}">
+                    <div class="font-bold text-gray-700 mb-2 border-b border-gray-100 pb-1 text-xs uppercase">Bank Details</div>
+                    <div class="grid grid-cols-3 gap-y-1 text-xs">
+                        <span class="text-gray-500">Bank:</span>
+                        <span id="previewBankName" class="col-span-2 font-medium text-gray-800">{{ company.bank_name }}</span>
+                        
+                        <span class="text-gray-500">A/C:</span>
+                        <span id="previewAccount" class="col-span-2 font-medium text-gray-800 font-mono">{{ company.account_number }}</span>
+                        
+                        <span class="text-gray-500">IFSC:</span>
+                        <span id="previewIfsc" class="col-span-2 font-medium text-gray-800 font-mono">{{ company.ifsc_code }}</span>
+                        
+                        <span id="previewSwiftLabel" class="text-gray-500 {% if not company.swift_code %}hidden{% endif %}">SWIFT:</span>
+                        <span id="previewSwift" class="col-span-2 font-medium text-gray-800 font-mono {% if not company.swift_code %}hidden{% endif %}">{{ company.swift_code }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

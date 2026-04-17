@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ invoice.id }} - {{ company.name|default:"Chargebee" }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: none; height: 100%; width: 100% !important; background-color: #f4f7fa;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f7fa;">
+        <tr>
+            <td align="center" style="padding: 20px 10px;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="padding: 40px 40px 30px 40px; background-color: #000000ff;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; text-transform: uppercase;">
+                                Invoice #{{ invoice.id }}
+                            </h1>
+                            <p style="margin: 8px 0 0 0; color: #e0e7ff; font-size: 14px; font-weight: 500;">
+                                {{ company.name|default:"Chargebee Billing System" }}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 24px; color: #1e293b; font-weight: 500;">
+                                Hello {{ customer.name }},
+                            </p>
+                            <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 24px; color: #475569;">
+                                We hope you're having a great day! Your invoice for recent services has been generated. You'll find a summary below and the detailed invoice attached as a PDF.
+                            </p>
+
+                            <!-- Invoice Overview Card -->
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 24px;">
+                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="padding-bottom: 20px;">
+                                                    <span style="display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Amount Due</span>
+                                                    <span style="display: block; font-size: 32px; font-weight: 800; color: #1e293b;">₹{{ invoice.balance_due|floatformat:2 }}</span>
+                                                </td>
+                                                <td align="right" valign="top" style="padding-bottom: 20px;">
+                                                    {% if invoice.is_paid %}
+                                                    <span style="display: inline-block; padding: 4px 12px; background-color: #dcfce7; color: #15803d; font-size: 12px; font-weight: 700; border-radius: 9999px; text-transform: uppercase;">Paid</span>
+                                                    {% else %}
+                                                    <span style="display: inline-block; padding: 4px 12px; background-color: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 700; border-radius: 9999px; text-transform: uppercase;">Unpaid</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                                                    <span style="display: block; font-size: 12px; font-weight: 600; color: #64748b;">Due Date</span>
+                                                    <span style="display: block; font-size: 14px; font-weight: 600; color: #1e293b;">{{ invoice.due_date|date:"d M Y"|default:"Immediate" }}</span>
+                                                </td>
+                                                <td align="right" style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                                                    <span style="display: block; font-size: 12px; font-weight: 600; color: #64748b;">Invoice Date</span>
+                                                    <span style="display: block; font-size: 14px; font-weight: 600; color: #1e293b;">{{ invoice.date|date:"d M Y" }}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Item List -->
+                            <h2 style="margin: 0 0 16px 0; font-size: 14px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Invoice Items</h2>
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 30px;">
+                                <thead>
+                                    <tr>
+                                        <th align="left" style="padding: 12px 0; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Description</th>
+                                        <th align="center" style="padding: 12px 0; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Qty</th>
+                                        <th align="right" style="padding: 12px 0; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Price</th>
+                                        <th align="right" style="padding: 12px 0; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #1e293b;">
+                                            <div style="font-weight: 600;">{{ item.product.name }}</div>
+                                            {% if item.description %}<div style="font-size: 12px; color: #64748b; margin-top: 2px;">{{ item.description }}</div>{% endif %}
+                                        </td>
+                                        <td align="center" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #475569;">{{ item.quantity }}</td>
+                                        <td align="right" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #475569;">₹{{ item.price|floatformat:2 }}</td>
+                                        <td align="right" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #1e293b; font-weight: 600;">₹{{ item.total_with_tax|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" align="right" style="padding: 16px 0 8px 0; font-size: 14px; color: #64748b;">Subtotal</td>
+                                        <td align="right" style="padding: 16px 0 8px 0; font-size: 14px; color: #1e293b; font-weight: 500;">₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" align="right" style="padding: 8px 0; font-size: 14px; color: #64748b;">Amount Paid</td>
+                                        <td align="right" style="padding: 8px 0; font-size: 14px; color: #15803d; font-weight: 500;">-₹{{ invoice.amount_paid|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" align="right" style="padding: 12px 0; font-size: 16px; font-weight: 700; color: #1e293b; border-top: 2px solid #e2e8f0;">Total Balance Due</td>
+                                        <td align="right" style="padding: 12px 0; font-size: 18px; font-weight: 800; color: #f80404ff; border-top: 2px solid #e2e8f0;">₹{{ invoice.balance_due|floatformat:2 }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <!-- Call to Action -->
+                            {% if not invoice.is_paid %}
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding-top: 10px;">
+                                        <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'invoice_detail' pk=invoice.id %}" style="display: inline-block; padding: 16px 32px; background-color: #000000ff; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);">
+                                            View & Pay Invoice Online
+                                        </a>
+                                        <p style="margin: 16px 0 0 0; font-size: 13px; color: #94a3b8;">
+                                            Quick and secure payment powered by Razorpay
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Help & Contact -->
+                    {% if company %}
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                            <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #1e293b;">Need help or have questions?</h3>
+                            <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 20px;">
+                                {% if company.email %}Email us at <a href="mailto:{{ company.email }}" style="color: #000000ff; text-decoration: none; font-weight: 600;">{{ company.email }}</a>{% endif %}
+                                {% if company.phone %}<br>Call us at <span style="font-weight: 600; color: #1e293b;">{{ company.phone }}</span>{% endif %}
+                            </p>
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="padding: 40px; background-color: #f1f5f9; color: #94a3b8; font-size: 12px; line-height: 18px;">
+                            <p style="margin: 0 0 12px 0; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Sent by {{ company.name|default:"Chargebee" }}
+                            </p>
+                            {% if company.address %}<p style="margin: 0 0 12px 0;">{{ company.address }}</p>{% endif %}
+                            <p style="margin: 0;">This is an automated transaction receipt. Please do not reply directly.</p>
+                            <p style="margin: 12px 0 0 0;">© 2026 {{ company.name|default:"Chargebee" }}. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

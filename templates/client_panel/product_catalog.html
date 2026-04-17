@@ -1,0 +1,333 @@
+{% extends 'general/base.html' %}
+{% load static %}
+{% block title %}Products - Chargebee{% endblock %}
+{% block content %}
+
+<!-- PRODUCT LIST VIEW -->
+{% if not form %}
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-300 page-header-sticky">
+    <h2 class="text-xl font-bold"><i class="fas fa-boxes mr-2"></i>Products</h2>
+    <div class="flex items-center gap-2">
+        <form method="get" class="global-search-wrapper">
+            <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search Name or HSN..." data-ajax-search="true" class="global-search-input">
+            {% if search_query %}
+            <a href="{% url 'product_list' %}" class="global-search-clear" title="Clear search">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+            <button type="submit" class="global-search-btn">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </button>
+        </form>
+        {% if not user.role.role == 'client' %}
+        <button id="removeAllProducts" class="btn btn-danger">
+            <i class="fas fa-trash-alt"></i>
+            <span>Remove All</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div id="ajax-list-container" class="bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-200 border-b border-gray-300">
+                <th class="text-left px-3 py-2 font-semibold">Name</th>
+                <th class="text-right px-3 py-2 font-semibold">Price</th>
+                <th class="text-right px-3 py-2 font-semibold">Stock</th>
+                <th class="text-left px-3 py-2 font-semibold">HSN</th>
+                <th class="text-right px-3 py-2 font-semibold">GST%</th>
+                {% if not user.role.role == 'client' %}
+                <th class="text-right px-3 py-2 font-semibold">Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='{% url 'product_edit' product.id %}'">
+                <td class="px-3 py-2 font-medium">{{ product.name }}</td>
+                <td class="px-3 py-2 text-right">{{ product.price }}</td>
+                <td class="px-3 py-2 text-right">
+                    {% if product.stock <= 0 %}
+                    <span class="text-red-600 font-bold uppercase text-[10px] bg-red-50 px-1.5 py-0.5 border border-red-200">Out of Stock</span>
+                    {% elif product.is_low_stock %}
+                    <span class="text-orange-600 font-bold" title="Low Stock (Threshold: {{ product.low_stock_threshold }})">
+                        {{ product.stock }} <i class="fas fa-exclamation-triangle ml-1"></i>
+                    </span>
+                    {% else %}
+                    <span class="text-green-600 font-medium">{{ product.stock }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-3 py-2 text-xs">{{ product.hsn_code }}</td>
+                <td class="px-3 py-2 text-right">{{ product.gst_rate }}%</td>
+                {% if not user.role.role == 'client' %}
+                <td class="px-3 py-2 text-right">
+                    <div class="action-btn-group">
+                        <button onclick="openDamagedModal('{{ product.id }}', '{{ product.name }}', {{ product.stock }})" class="action-btn action-btn-adjust" title="Remove Damaged">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </button>
+                        <a href="{% url 'product_delete' product.id %}" class="action-btn action-btn-delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="px-3 py-8 text-center text-gray-500">
+                    No products found. {% if not user.role.role == 'client' %}<a href="{% url 'product_create' %}" class="text-blue-600 hover:underline">Add one</a>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Hidden CSRF Token for AJAX -->
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+<script>
+    document.getElementById('removeAllProducts')?.addEventListener('click', function() {
+        const btn = this;
+        showConfirm('Are you sure you want to remove ALL products? This action cannot be undone!', () => {
+            const originalText = btn.textContent;
+            
+            // Get token from input or cookie
+            let csrftoken = document.getElementById('csrfToken').value;
+            if (!csrftoken) {
+                // Fallback to cookie
+                const name = 'csrftoken';
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                csrftoken = cookieValue;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Removing...';
+            
+            fetch('{% url "product_remove_all" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    location.reload();
+                } else {
+                    showToast('Error: ' + (data.error || 'Failed to remove products'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                showToast('Error: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        });
+    });
+</script>
+
+<!-- Remove Damaged Products Modal -->
+<div id="damagedModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white border border-gray-300 w-full max-w-md mx-4 rounded-xl shadow-lg overflow-hidden">
+        <form id="damagedForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="reason" value="damaged">
+            <input type="hidden" name="adjustment" id="damagedAdjustmentValue">
+            <div class="px-4 py-3 border-b border-gray-300 bg-red-50 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-red-700" id="damagedModalTitle"><i class="fas fa-exclamation-triangle mr-1"></i> Remove Damaged Stock</h3>
+                <button type="button" onclick="closeDamagedModal()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Product: <span id="damagedProductName" class="text-gray-700"></span></label>
+                    <label class="block text-sm font-bold mb-1">Current Stock: <span id="damagedCurrentStock" class="text-blue-600"></span></label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Damaged Quantity *</label>
+                    <input type="number" id="damagedQtyInput" min="1" class="w-full border border-red-300 px-3 py-1.5 text-sm rounded-lg focus:outline-none focus:border-red-500" required placeholder="Enter number of damaged items">
+                    <p class="text-xs text-red-500 mt-1">This quantity will be removed from stock</p>
+                </div>
+            </div>
+            
+            <div class="px-4 py-3 border-t border-gray-300 bg-gray-50 flex justify-end gap-2">
+                <button type="button" onclick="closeDamagedModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-1.5 text-sm rounded-lg"><i class="fas fa-times mr-1"></i>Cancel</button>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 text-sm rounded-lg"><i class="fas fa-trash-alt mr-1"></i> Remove Damaged</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const damagedModal = document.getElementById('damagedModal');
+    const damagedForm = document.getElementById('damagedForm');
+    const damagedProductName = document.getElementById('damagedProductName');
+    const damagedCurrentStock = document.getElementById('damagedCurrentStock');
+    const damagedQtyInput = document.getElementById('damagedQtyInput');
+    const damagedAdjustmentValue = document.getElementById('damagedAdjustmentValue');
+    
+    function openDamagedModal(productId, productName, currentStock) {
+        damagedForm.action = `/inventory/adjust/${productId}/`;
+        damagedProductName.textContent = productName;
+        damagedCurrentStock.textContent = currentStock;
+        damagedQtyInput.max = currentStock;
+        damagedQtyInput.value = '';
+        damagedModal.style.display = 'flex';
+        damagedModal.classList.remove('hidden');
+    }
+    
+    function closeDamagedModal() {
+        damagedModal.style.display = 'none';
+        damagedModal.classList.add('hidden');
+        damagedForm.reset();
+    }
+    
+    damagedModal.addEventListener('click', (e) => {
+        if (e.target === damagedModal) {
+            closeDamagedModal();
+        }
+    });
+    
+    damagedForm.addEventListener('submit', function(e) {
+        const qty = parseInt(damagedQtyInput.value) || 0;
+        if (qty <= 0) {
+            e.preventDefault();
+            showToast('Please enter a valid damaged quantity.', 'error');
+            return;
+        }
+        const currentStock = parseInt(damagedCurrentStock.textContent) || 0;
+        if (qty > currentStock) {
+            e.preventDefault();
+            showToast(`Cannot remove ${qty} items. Only ${currentStock} in stock.`, 'error');
+            return;
+        }
+        damagedAdjustmentValue.value = -qty;
+    });
+</script>
+
+<!-- PRODUCT FORM VIEW (Create/Edit) -->
+{% else %}
+<div class="mb-4">
+    <h2 class="text-xl font-bold pb-2 border-b border-gray-300 page-header-sticky">
+        {% if object %}Edit Product{% else %}New Product{% endif %}
+    </h2>
+</div>
+
+<div class="bg-white border border-gray-300 p-4 w-full rounded-xl shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="block text-sm font-bold mb-1">Name *</label>
+            {{ form.name }}
+        </div>
+        
+        <div class="mb-3">
+            <label class="block text-sm font-bold mb-1">Description</label>
+            {{ form.description }}
+        </div>
+        
+        <div class="grid grid-cols-3 gap-3 mb-3">
+            <div>
+                <label class="block text-sm font-bold mb-1">Price *</label>
+                {{ form.price }}
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-1">Stock *</label>
+                {{ form.stock }}
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-1">Low Stock Threshold</label>
+                {{ form.low_stock_threshold }}
+                <p class="text-[10px] text-gray-500 mt-1">Alert when stock falls below this</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+                <label class="block text-sm font-bold mb-1">HSN Code *</label>
+                {{ form.hsn_code }}
+            </div>
+            <div>
+                <label class="block text-sm font-bold mb-1">Discount (%)</label>
+                {{ form.discount }}
+            </div>
+        </div>
+
+        <div class="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <label class="block text-sm font-bold mb-2 text-gray-700 border-b border-gray-200 pb-1">GST Breakdown</label>
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-bold mb-1 text-gray-500">IGST (Total %) *</label>
+                    {{ form.gst_rate }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1 text-gray-500">CGST (%)</label>
+                    <input type="number" id="id_cgst" class="w-full border border-gray-300 px-3 py-2 bg-gray-100 rounded-lg" min="0" step="0.01" placeholder="Auto">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1 text-gray-500">SGST (%)</label>
+                    <input type="number" id="id_sgst" class="w-full border border-gray-300 px-3 py-2 bg-gray-100 rounded-lg" min="0" step="0.01" placeholder="Auto">
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-1">* Enter IGST/Total to auto-calc CGST & SGST, or enter CGST to update Total.</p>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const igstInput = document.getElementById('id_gst_rate');
+                const cgstInput = document.getElementById('id_cgst');
+                const sgstInput = document.getElementById('id_sgst');
+
+                function updateFromIgst() {
+                    const val = parseFloat(igstInput.value) || 0;
+                    const half = (val / 2).toFixed(2);
+                    if (document.activeElement !== cgstInput && document.activeElement !== sgstInput) {
+                        cgstInput.value = half;
+                        sgstInput.value = half;
+                    }
+                }
+
+                function updateFromSplit() {
+                    const cVal = parseFloat(cgstInput.value) || 0;
+                    // Assuming symmetric split for standard GST
+                    const total = (cVal * 2).toFixed(2);
+                    igstInput.value = total;
+                    sgstInput.value = cVal; // Sync SGST to CGST for convenience
+                }
+
+                igstInput.addEventListener('input', updateFromIgst);
+                cgstInput.addEventListener('input', updateFromSplit);
+                
+                // Init
+                if(igstInput.value) updateFromIgst();
+            });
+        </script>
+        
+        <div class="flex gap-2 pt-3 border-t border-gray-200">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg"><i class="fas fa-save mr-1"></i>Save</button>
+            <a href="{% url 'product_list' %}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-1.5 inline-block rounded-lg"><i class="fas fa-times mr-1"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}

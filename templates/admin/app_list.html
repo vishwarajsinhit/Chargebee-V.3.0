@@ -1,0 +1,156 @@
+{% load i18n %}
+
+{% if app_list %}
+  {% for app in app_list %}
+    {% if app.app_label == 'billing' %}
+        <!-- Billing Section -->
+        <div class="app-{{ app.app_label }} module collapsible-section">
+          <table>
+            <caption>
+              <a href="javascript:void(0);" class="section section-toggle" data-section="billing">
+                <span class="toggle-icon">▼</span> {% translate 'Billing' %}
+              </a>
+            </caption>
+            <tbody class="section-content" data-section-content="billing">
+            {% for model in app.models %}
+              {% if model.object_name == 'Invoice' or model.object_name == 'Customer' or model.object_name == 'Transaction' or model.object_name == 'CustomerAssignment' %}
+              <tr class="model-{{ model.object_name|lower }}">
+                {% if model.admin_url %}
+                  <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                {% else %}
+                  <th scope="row">{{ model.name }}</th>
+                {% endif %}
+
+                {% if model.add_url %}
+                  <td><a href="{{ model.add_url }}" class="addlink" title="{% blocktranslate with name=model.name %}Add another {{ name }}{% endblocktranslate %}">{% translate 'Add' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+
+                {% if model.admin_url and model.view_only %}
+                  <td><a href="{{ model.admin_url }}" class="viewlink" title="{% blocktranslate with name=model.name %}View {{ name }}{% endblocktranslate %}">{% translate 'View' %}</a></td>
+                {% elif model.admin_url %}
+                  <td><a href="{{ model.admin_url }}" class="changelink" title="{% blocktranslate with name=model.name %}Change {{ name }}{% endblocktranslate %}">{% translate 'Change' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+              </tr>
+              {% endif %}
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Inventory Section -->
+        <div class="app-inventory module collapsible-section">
+          <table>
+            <caption>
+              <a href="javascript:void(0);" class="section section-toggle" data-section="inventory">
+                <span class="toggle-icon">▼</span> {% translate 'Inventory' %}
+              </a>
+            </caption>
+            <tbody class="section-content" data-section-content="inventory">
+            {% for model in app.models %}
+              {% if model.object_name == 'Product' or model.object_name == 'InventoryLog' %}
+              <tr class="model-{{ model.object_name|lower }}">
+                {% if model.admin_url %}
+                  <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                {% else %}
+                  <th scope="row">{{ model.name }}</th>
+                {% endif %}
+
+                {% if model.add_url %}
+                  <td><a href="{{ model.add_url }}" class="addlink" title="{% blocktranslate with name=model.name %}Add another {{ name }}{% endblocktranslate %}">{% translate 'Add' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+
+                {% if model.admin_url and model.view_only %}
+                  <td><a href="{{ model.admin_url }}" class="viewlink" title="{% blocktranslate with name=model.name %}View {{ name }}{% endblocktranslate %}">{% translate 'View' %}</a></td>
+                {% elif model.admin_url %}
+                  <td><a href="{{ model.admin_url }}" class="changelink" title="{% blocktranslate with name=model.name %}Change {{ name }}{% endblocktranslate %}">{% translate 'Change' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+              </tr>
+              {% endif %}
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Administration Section -->
+        <div class="app-administration module collapsible-section">
+          <table>
+            <caption>
+              <a href="javascript:void(0);" class="section section-toggle" data-section="administration">
+                <span class="toggle-icon">▼</span> {% translate 'Administration' %}
+              </a>
+            </caption>
+            <tbody class="section-content" data-section-content="administration">
+            {% for model in app.models %}
+              {% if model.object_name == 'Company' or model.object_name == 'UserRole' or model.object_name == 'UserProfile' or model.object_name == 'ActivityLog' or model.object_name == 'RazorpayPayment' %}
+              <tr class="model-{{ model.object_name|lower }}">
+                {% if model.admin_url %}
+                  <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                {% else %}
+                  <th scope="row">{{ model.name }}</th>
+                {% endif %}
+
+                {% if model.add_url %}
+                  <td><a href="{{ model.add_url }}" class="addlink" title="{% blocktranslate with name=model.name %}Add another {{ name }}{% endblocktranslate %}">{% translate 'Add' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+
+                {% if model.admin_url and model.view_only %}
+                  <td><a href="{{ model.admin_url }}" class="viewlink" title="{% blocktranslate with name=model.name %}View {{ name }}{% endblocktranslate %}">{% translate 'View' %}</a></td>
+                {% elif model.admin_url %}
+                  <td><a href="{{ model.admin_url }}" class="changelink" title="{% blocktranslate with name=model.name %}Change {{ name }}{% endblocktranslate %}">{% translate 'Change' %}</a></td>
+                {% else %}
+                  <td>&nbsp;</td>
+                {% endif %}
+              </tr>
+              {% endif %}
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+    {% else %}
+      <!-- Standard App Rendering -->
+      <div class="app-{{ app.app_label }} module">
+        <table>
+          <caption>
+            <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          </caption>
+          {% for model in app.models %}
+            <tr class="model-{{ model.object_name|lower }}">
+              {% if model.admin_url %}
+                <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+              {% else %}
+                <th scope="row">{{ model.name }}</th>
+              {% endif %}
+
+              {% if model.add_url %}
+                <td><a href="{{ model.add_url }}" class="addlink" title="{% blocktranslate with name=model.name %}Add another {{ name }}{% endblocktranslate %}">{% translate 'Add' %}</a></td>
+              {% else %}
+                <td>&nbsp;</td>
+              {% endif %}
+
+              {% if model.admin_url and model.view_only %}
+                <td><a href="{{ model.admin_url }}" class="viewlink" title="{% blocktranslate with name=model.name %}View {{ name }}{% endblocktranslate %}">{% translate 'View' %}</a></td>
+              {% elif model.admin_url %}
+                <td><a href="{{ model.admin_url }}" class="changelink" title="{% blocktranslate with name=model.name %}Change {{ name }}{% endblocktranslate %}">{% translate 'Change' %}</a></td>
+              {% else %}
+                <td>&nbsp;</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% else %}
+  <p>{% translate "You don't have permission to view or edit anything." %}</p>
+{% endif %}

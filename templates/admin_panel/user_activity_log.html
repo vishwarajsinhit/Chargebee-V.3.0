@@ -1,0 +1,59 @@
+{% extends 'general/base.html' %}
+{% block title %}Activity Logs - Chargebee{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6 pb-2 border-b border-gray-300 page-header-sticky">
+    <div>
+        <h2 class="text-xl font-bold"><i class="fas fa-history mr-2"></i>Recent Activity Log</h2>
+        <div class="text-sm text-gray-500">User: <span class="font-semibold text-gray-700">{{ target_user.username }}</span> ({{ target_user.email }})</div>
+    </div>
+    <a href="{% url 'user_management' %}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-1.5 text-sm rounded-lg"><i class="fas fa-arrow-left mr-1"></i>Back to Users</a>
+</div>
+
+<div class="bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-100 border-b border-gray-300 text-xs uppercase text-gray-600">
+                <th class="text-left px-4 py-3">Timestamp</th>
+                <th class="text-left px-4 py-3">Action</th>
+                <th class="text-left px-4 py-3">Module</th>
+                <th class="text-left px-4 py-3">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in activities %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50 text-sm">
+                <td class="px-4 py-2.5 text-gray-600">{{ log.timestamp|date:"d M Y, H:i" }}</td>
+                <td class="px-4 py-2.5">
+                    {% if log.action == 'LOGIN' %}
+                    <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-semibold border border-green-200">LOGIN</span>
+                    {% elif log.action == 'LOGOUT' %}
+                    <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-semibold border border-gray-300">LOGOUT</span>
+                    {% elif log.action == 'DELETE' %}
+                    <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-200">DELETE</span>
+                    {% elif log.action == 'CREATE' %}
+                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-semibold border border-blue-200">CREATE</span>
+                    {% else %}
+                    <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full text-xs font-semibold border border-indigo-100">{{ log.action }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2.5 font-medium text-gray-700">{{ log.model_name }}</td>
+                <td class="px-4 py-2.5 text-gray-600">
+                    {% if log.details %}
+                    {{ log.details }}
+                    {% else %}
+                    {{ log.object_repr }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-4 py-12 text-center text-gray-500 bg-gray-50">
+                    <div class="mb-2">No activity recorded for this user yet.</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

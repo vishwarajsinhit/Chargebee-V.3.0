@@ -1,0 +1,132 @@
+{% extends 'general/base.html' %}
+{% load static %}
+{% block title %}Analytics & Reports - Chargebee{% endblock %}
+
+{% block content %}
+<!-- Charts Section -->
+<h3 class="text-lg font-bold mb-4 pb-2 border-b border-gray-300 page-header-sticky"><i class="fas fa-chart-line mr-2"></i>Analytics & Reports</h3>
+
+<!-- Revenue & Status Charts -->
+<div class="grid grid-cols-2 gap-3 mb-4">
+    <!-- Revenue Trend Chart -->
+    <div class="bg-white border border-gray-300 p-4 rounded-xl shadow-sm">
+        <div class="font-bold text-sm mb-3"><i class="fas fa-chart-area mr-1"></i>Revenue Trend (Last 6 Months)</div>
+        <div style="height: 180px;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Invoice Status Chart -->
+    <div class="bg-white border border-gray-300 p-4 rounded-xl shadow-sm">
+        <div class="font-bold text-sm mb-3"><i class="fas fa-chart-pie mr-1"></i>Invoice Status Distribution</div>
+        <div style="height: 180px; max-width: 300px; margin: 0 auto;">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Row 1: Line Chart (Full Width) -->
+<div class="grid grid-cols-1 gap-3 mb-4">
+    <!-- Invoice Trend Line Chart -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="font-semibold text-xs mb-2 text-gray-700"><i class="fas fa-chart-line mr-1"></i>Invoice Trend (Last 6 Months)</div>
+        <div class="h-60">
+            <canvas id="invoiceTrendChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Doughnut Charts & Horizontal Bar -->
+<div class="grid grid-cols-2 gap-3 mb-4">
+    <!-- Top Products Doughnut Chart -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="font-semibold text-xs mb-2 text-gray-700"><i class="fas fa-trophy mr-1"></i>Top 5 Products by Sales</div>
+        <div class="h-48 flex justify-center">
+            <canvas id="topProductsChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Top Customers Horizontal Bar -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="font-semibold text-xs mb-2 text-gray-700"><i class="fas fa-crown mr-1"></i>Top Customers</div>
+        <div class="h-48">
+            <canvas id="topCustomersChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js and Custom Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/chart.js' %}"></script>
+<script>
+    // Initialize Admin Panel Charts
+    window.addEventListener('load', function() {
+        // Revenue Trend Chart (bar chart)
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ monthly_labels|safe }},
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: {{ monthly_revenue_data|safe }},
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function(v) { return '₹' + v.toLocaleString(); } } }
+                    }
+                }
+            });
+        }
+
+        // Invoice Status Doughnut Chart
+        const statusCtx = document.getElementById('statusChart');
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Paid', 'Unpaid'],
+                    datasets: [{
+                        data: [{{ paid_invoices }}, {{ unpaid_invoices }}],
+                        backgroundColor: ['#22c55e', '#f97316'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } }
+                }
+            });
+        }
+
+        if (typeof initializeAdminPanelCharts === 'function') {
+            initializeAdminPanelCharts({
+                monthlyLabels: {{ monthly_labels|safe }},
+                monthlyInvoices: {{ monthly_invoices_data|safe }},
+                monthlyPaid: {{ monthly_paid_data|safe }},
+                topProductNames: {{ top_product_names|safe }},
+                topProductSales: {{ top_product_sales|safe }},
+                activeCustomers: {{ active_customers }},
+                totalCustomers: {{ total_customers }},
+                topCustomerNames: {{ top_customer_names|safe }},
+                topCustomerRevenue: {{ top_customer_revenue|safe }}
+            });
+        }
+    });
+</script>
+{% endblock %}

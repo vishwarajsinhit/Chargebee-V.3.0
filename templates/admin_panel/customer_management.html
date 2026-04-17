@@ -1,0 +1,258 @@
+{% extends 'general/base.html' %}
+{% load static %}
+{% block title %}Customers - Chargebee{% endblock %}
+
+{% block content %}
+<!-- Customer List View -->
+{% if not form %}
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-300 page-header-sticky">
+    <h1 class="text-2xl font-bold"><i class="fas fa-address-book mr-2"></i>Customers</h1>
+    <div class="flex items-center gap-2">
+        <form method="get" class="global-search-wrapper">
+            <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search Name, Email, Phone..." data-ajax-search="true" class="global-search-input">
+            {% if search_query %}
+            <a href="{% url 'customer_list' %}" class="global-search-clear" title="Clear search">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+            <button type="submit" class="global-search-btn">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </button>
+        </form>
+        <a href="{% url 'customer_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span>Add Customer</span>
+        </a>
+    </div>
+</div>
+
+
+
+<div id="ajax-list-container" class="bg-white border border-gray-300 rounded-xl overflow-hidden shadow-sm">
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-200 border-b border-gray-300">
+                <th class="text-left px-3 py-2 font-semibold">Name</th>
+                <th class="text-left px-3 py-2 font-semibold">Email</th>
+                <th class="text-left px-3 py-2 font-semibold">Phone</th>
+                <th class="text-left px-3 py-2 font-semibold">Address</th>
+                <th class="text-left px-3 py-2 font-semibold">Client Login</th>
+                <th class="text-right px-3 py-2 font-semibold">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50 cursor-pointer" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='{% url 'customer_statement' customer.id %}'">
+                <td class="px-3 py-2 font-medium">{{ customer.name }}</td>
+                <td class="px-3 py-2">{{ customer.email }}</td>
+                <td class="px-3 py-2">{{ customer.phone }}</td>
+                <td class="px-3 py-2 text-xs">{{ customer.address|truncatewords:5 }}</td>
+                <td class="px-3 py-2">
+                    {% for assignment in customer.assignments.all %}
+                    <div class="flex items-center text-sm">
+                        <svg class="w-3 h-3 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span class="font-medium text-blue-700">{{ assignment.user.username }}</span>
+                    </div>
+                    {% empty %}
+                    <span class="text-xs text-gray-400 italic">No Access</span>
+                    {% endfor %}
+                </td>
+                <td class="px-3 py-2 text-right">
+                    <div class="action-btn-group">
+                        <a href="{% url 'customer_edit' customer.id %}" class="action-btn action-btn-edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'customer_delete' customer.id %}" class="action-btn action-btn-delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="px-3 py-8 text-center text-gray-500">
+                    No customers found. <a href="{% url 'customer_create' %}" class="text-blue-600 hover:underline">Add one</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Customer Form View (Create/Edit) -->
+{% else %}
+<div class="mb-4">
+    <!-- Form Header -->
+    <h2 class="text-xl font-bold pb-2 border-b border-gray-300 page-header-sticky">
+        {% if edit_mode %}
+        <i class="fas fa-user-edit mr-2"></i>Edit Customer: {{ target_customer.name }}
+        {% else %}
+        <i class="fas fa-user-plus mr-2"></i>Add Customer
+        {% endif %}
+    </h2>
+</div>
+
+<div class="bg-white border border-gray-300 p-5 shadow-sm rounded-xl mb-2">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="max-h-[calc(100vh-230px)] overflow-y-auto pr-2 mb-4">
+            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <label class="block text-sm font-bold mb-1 text-blue-800">Assign Client Login (Optional)</label>
+                {{ form.assigned_user }}
+                <p class="text-xs text-blue-600 mt-1">Select a user to likely auto-fill details below.</p>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="text-red-600 text-xs mt-1">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Email *</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <div class="text-red-600 text-xs mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Phone</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                <div class="text-red-600 text-xs mt-1">{{ form.phone.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Company & Contact Information -->
+            <h3 class="font-bold text-sm text-gray-700 mt-6 mb-3 border-b pb-2">Company Details</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Company Name</label>
+                    {{ form.company_name }}
+                    {% if form.company_name.errors %}<div class="text-red-600 text-xs mt-1">{{ form.company_name.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Contact Person</label>
+                    {{ form.contact_person }}
+                    {% if form.contact_person.errors %}<div class="text-red-600 text-xs mt-1">{{ form.contact_person.errors }}</div>{% endif %}
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-bold mb-1">Company Type</label>
+                    {{ form.company_type }}
+                    {% if form.company_type.errors %}<div class="text-red-600 text-xs mt-1">{{ form.company_type.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <h3 class="font-bold text-sm text-gray-700 mt-6 mb-3 border-b pb-2">Address Information</h3>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="col-span-2">
+                    <label class="block text-sm font-bold mb-1">Address Line 1</label>
+                    {{ form.address1 }}
+                    {% if form.address1.errors %}<div class="text-red-600 text-xs mt-1">{{ form.address1.errors }}</div>{% endif %}
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-bold mb-1">Address Line 2</label>
+                    {{ form.address2 }}
+                    {% if form.address2.errors %}<div class="text-red-600 text-xs mt-1">{{ form.address2.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Land Mark</label>
+                    {{ form.landmark }}
+                    {% if form.landmark.errors %}<div class="text-red-600 text-xs mt-1">{{ form.landmark.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Pincode</label>
+                    {{ form.pincode }}
+                    {% if form.pincode.errors %}<div class="text-red-600 text-xs mt-1">{{ form.pincode.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">City</label>
+                    {{ form.city }}
+                    {% if form.city.errors %}<div class="text-red-600 text-xs mt-1">{{ form.city.errors }}</div>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">State</label>
+                    {{ form.state }}
+                    {% if form.state.errors %}<div class="text-red-600 text-xs mt-1">{{ form.state.errors }}</div>{% endif %}
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-sm font-bold mb-1">Country</label>
+                    {{ form.country }}
+                    {% if form.country.errors %}<div class="text-red-600 text-xs mt-1">{{ form.country.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-bold mb-1">Legacy Address Notes</label>
+                {{ form.address }}
+                {% if form.address.errors %}
+                <div class="text-red-600 text-xs mt-1">{{ form.address.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>Save</button>
+            <a href="{% url 'customer_list' %}" class="btn btn-secondary"><i class="fas fa-times mr-1"></i>Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% if user_data_json %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userData = {{ user_data_json|safe }};
+        const userSelect = document.getElementById('id_assigned_user');
+        
+        // Define all fields to auto-fill mapping their IDs to the JSON object keys
+        const fields = {
+            'id_name': 'name',
+            'id_email': 'email',
+            'id_phone': 'phone',
+            'id_address': 'address',
+            'id_company_name': 'company_name',
+            'id_contact_person': 'contact_person',
+            'id_company_type': 'company_type',
+            'id_address1': 'address1',
+            'id_address2': 'address2',
+            'id_landmark': 'landmark',
+            'id_pincode': 'pincode',
+            'id_city': 'city',
+            'id_state': 'state',
+            'id_country': 'country'
+        };
+        
+        if (userSelect) {
+            userSelect.addEventListener('change', function() {
+                const userId = String(this.value);
+                const user = userData[userId];
+                
+                for (const [elementId, dataKey] of Object.entries(fields)) {
+                    const el = document.getElementById(elementId);
+                    if (el) {
+                        if (userId && user) {
+                            el.value = user[dataKey] || '';
+                        } else {
+                            // Clear fields if "no selection"
+                            if (elementId === 'id_country') {
+                                el.value = 'India'; // Default for country
+                            } else {
+                                el.value = '';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endif %}
+
+{% endblock %}

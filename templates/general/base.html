@@ -1,0 +1,306 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Chargebee{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}">
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Smooth theme transition */
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+        /* Sidebar slide animation */
+        #sidebar {
+            width: 256px;
+            min-width: 256px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-collapsed #sidebar,
+        #sidebar.collapsed {
+            width: 64px;
+            min-width: 64px;
+        }
+        #sidebar .sidebar-text {
+            opacity: 1;
+            transition: opacity 0.2s ease 0.1s;
+            white-space: nowrap;
+        }
+        .sidebar-collapsed #sidebar .sidebar-text,
+        #sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        #sidebar .sidebar-header-content {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.2s ease 0.1s, visibility 0s linear 0s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar-collapsed #sidebar .sidebar-header-content,
+        #sidebar.collapsed .sidebar-header-content {
+            display: none;
+        }
+        #sidebar .sidebar-section-title {
+            opacity: 1;
+            transition: opacity 0.2s ease 0.1s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar-collapsed #sidebar .sidebar-section-title,
+        #sidebar.collapsed .sidebar-section-title {
+            display: none;
+        }
+        .sidebar-collapsed #sidebar nav a,
+        #sidebar.collapsed nav a {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .sidebar-collapsed #sidebar nav a i,
+        #sidebar.collapsed nav a i {
+            margin-right: 0;
+            width: auto;
+            font-size: 1.1rem;
+        }
+        .sidebar-collapsed #sidebar .sidebar-footer-text,
+        #sidebar.collapsed .sidebar-footer-text {
+            display: none;
+        }
+        #sidebar .sidebar-footer-text {
+            transition: opacity 0.2s ease 0.1s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar-collapsed #sidebar .sidebar-footer,
+        #sidebar.collapsed .sidebar-footer {
+            justify-content: center;
+        }
+        #toggleSidebar {
+            transition: transform 0.3s ease;
+        }
+        .sidebar-collapsed #sidebar #toggleSidebar,
+        #sidebar.collapsed #toggleSidebar {
+            transform: rotate(180deg);
+        }
+        /* Show collapsed logo */
+        .sidebar-collapsed #sidebar .sidebar-collapsed-logo,
+        #sidebar.collapsed .sidebar-collapsed-logo {
+            display: block !important;
+        }
+        .sidebar-collapsed #sidebar .sidebar-collapsed-actions,
+        #sidebar.collapsed .sidebar-collapsed-actions {
+            display: flex !important;
+        }
+        /* Tooltip for collapsed sidebar */
+        .sidebar-collapsed #sidebar nav a,
+        #sidebar.collapsed nav a {
+            position: static;
+        }
+        .sidebar-collapsed #sidebar nav a:hover::after,
+        #sidebar.collapsed nav a:hover::after {
+            content: attr(data-tooltip);
+            position: fixed;
+            left: 84px;
+            margin-top: 10px;
+            transform: translateY(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="{% if user.role.role == 'client' %}bg-indigo-950{% else %}bg-slate-900{% endif %} text-white flex flex-col relative z-50">
+            <!-- Toggle Button -->
+            <button id="toggleSidebar" onclick="toggleSidebar()" class="absolute -right-3 top-6 z-50 bg-slate-700 hover:bg-slate-600 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-500" title="Toggle Sidebar">
+                <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <div class="sidebar-header-content">
+                    <a href="{% url 'dashboard' %}" class="hover:opacity-80 transition-opacity flex items-center gap-2.5">
+                        <img src="{% static 'favicon.png' %}" alt="CB Logo" class="w-9 h-9 rounded-lg">
+                        <div>
+                            <h1 class="text-xl font-bold leading-tight">Chargebee</h1>
+                            <p class="text-xs text-gray-400">Billing Software</p>
+                        </div>
+                    </a>
+                    <div class="pl-[46px]">
+                        {% if user.role.role == 'client' %}
+                        <p class="text-xs text-sky-300 font-medium mt-1" style="font-weight: bold;">Client Panel</p>
+                        {% elif user.is_superuser %}
+                        <p class="text-xs text-red-400 font-medium mt-1" style="font-weight: bold;">Administrator Panel</p>
+                        {% endif %}
+                        <p class="text-sm text-teal-400 mt-1 font-semibold">Welcome, {{ user.username|title }}!</p>
+                    </div>
+                </div>
+                <div class="sidebar-header-content">
+                    <button onclick="toggleTheme()" class="p-2 hover:bg-gray-700 rounded-lg" title="Toggle Theme">
+                        <svg id="themeIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <!-- Sun Icon (default) -->
+                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Collapsed: show logo icon only -->
+                <a href="{% url 'dashboard' %}" class="hidden sidebar-collapsed-logo">
+                    <img src="{% static 'favicon.png' %}" alt="CB Logo" class="w-8 h-8 rounded-lg">
+                </a>
+            </div>
+            
+            <nav class="flex-1 p-3 overflow-y-auto">
+                <!-- Overview -->
+                <div class="mb-6">
+                    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 sidebar-section-title">Overview</p>
+                    <a href="{% url 'dashboard' %}" data-tooltip="Dashboard" class="flex items-center px-3 py-2 text-sm {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-tachometer-alt w-5 mr-2"></i><span class="sidebar-text">Dashboard</span></a>
+                    {% if user.role.role == 'client' %}
+                    <a href="{% url 'client_profile' %}" data-tooltip="My Profile" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'client_profile' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-user-circle w-5 mr-2"></i><span class="sidebar-text">My Profile</span></a>
+                    {% endif %}
+                    {% if user.role.role != 'client' %}<a href="{% url 'admin_panel' %}" data-tooltip="Analytics & Reports" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'admin_panel' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-chart-line w-5 mr-2"></i><span class="sidebar-text">Analytics & Reports</span></a>{% endif %}
+                </div>
+
+                {% if user.is_superuser %}
+                <!-- Administration -->
+                <div class="mb-6">
+                    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 sidebar-section-title">Administration</p>
+                    <a href="{% url 'company_settings' %}" data-tooltip="Company Settings" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'company_settings' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-building w-5 mr-2"></i><span class="sidebar-text">Company Settings</span></a>
+                    <a href="{% url 'user_management' %}" data-tooltip="User Management" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name in 'user_management,user_create,user_update' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-users-cog w-5 mr-2"></i><span class="sidebar-text">User Management</span></a>
+                </div>
+                {% endif %}
+
+                <!-- Billing -->
+                <div class="mb-6">
+                    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 sidebar-section-title">Billing</p>
+                    {% if not user.role.role == 'client' %}
+                    <a href="{% url 'customer_list' %}" data-tooltip="Customers" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'customer_list' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-address-book w-5 mr-2"></i><span class="sidebar-text">Customers</span></a>
+                    <a href="{% url 'customer_create' %}" data-tooltip="Add Customer" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'customer_create' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-user-plus w-5 mr-2"></i><span class="sidebar-text">Add Customer</span></a>
+                    <a href="{% url 'invoice_create' %}" data-tooltip="New Invoice" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'invoice_create' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-file-invoice w-5 mr-2"></i><span class="sidebar-text">New Invoice</span></a>
+                    {% endif %}
+                    <a href="{% url 'invoice_list' %}" data-tooltip="Invoices" class="flex items-center px-3 py-2 text-sm mt-1 {% if 'invoices' in request.path and request.resolver_match.url_name != 'invoice_create' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-file-invoice-dollar w-5 mr-2"></i><span class="sidebar-text">Invoices</span></a>
+                </div>
+
+                <!-- Inventory -->
+                <div class="mb-6">
+                    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 sidebar-section-title">Inventory</p>
+                    {% if not user.role.role == 'client' %}
+                    <a href="{% url 'inventory_dashboard' %}" data-tooltip="Inventory Dashboard" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'inventory_dashboard' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-warehouse w-5 mr-2"></i><span class="sidebar-text">Inventory Dashboard</span></a>
+                    {% endif %}
+                    <a href="{% url 'product_list' %}" data-tooltip="Products" class="flex items-center px-3 py-2 text-sm mt-1 {% if 'products' in request.path %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-boxes w-5 mr-2"></i><span class="sidebar-text">Products</span></a>
+                    {% if not user.role.role == 'client' %}
+                    <a href="{% url 'recent_activity' %}" data-tooltip="Recent Activity" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'recent_activity' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-history w-5 mr-2"></i><span class="sidebar-text">Recent Activity</span></a>
+                    {% endif %}
+                </div>
+
+                {% if not user.role.role == 'client' %}
+                <!-- Analytics -->
+                <div class="mb-6">
+                    <p class="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 sidebar-section-title">Analytics</p>
+                    <a href="{% url 'reports' %}" data-tooltip="Reports" class="flex items-center px-3 py-2 text-sm mt-1 {% if request.resolver_match.url_name == 'reports' %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-chart-bar w-5 mr-2"></i><span class="sidebar-text">Reports</span></a>
+                    <a href="{% url 'expense_list' %}" data-tooltip="Expenses" class="flex items-center px-3 py-2 text-sm mt-1 {% if 'expenses' in request.path %}bg-gray-700 text-white rounded-lg{% else %}text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg{% endif %}"><i class="fas fa-receipt w-5 mr-2"></i><span class="sidebar-text">Expenses</span></a>
+                </div>
+                {% endif %}
+
+
+            </nav>
+
+
+            <div class="p-3 border-t border-gray-700 text-xs sidebar-footer">
+                <!-- Username: hidden when sidebar is collapsed -->
+                <div class="sidebar-footer-text mb-2">
+                    <span>User: <strong>{{ user.username }}</strong></span>
+                </div>
+                <!-- Logout button: always visible in expanded sidebar -->
+                <form method="post" action="{% url 'logout' %}" class="sidebar-footer-text">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center gap-2 w-full px-2 py-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors" title="Logout">
+                        <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                        <span class="sidebar-text">Logout</span>
+                    </button>
+                </form>
+                <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-700 text-gray-500 sidebar-footer-text">
+                    <a href="{% url 'about' %}" target="_blank" rel="noopener noreferrer" class="hover:text-gray-300 transition-colors">&copy; Chargebee Inc.</a>
+                    <div>Version 3.0</div>
+                </div>
+                <!-- Collapsed: show logout & theme icons only -->
+                <div class="sidebar-collapsed-actions hidden flex-col items-center gap-3">
+                    <button onclick="toggleTheme()" class="text-gray-400 hover:text-white transition-colors" title="Toggle Theme">
+                        <i id="themeIconCollapsed" class="fas fa-moon text-lg"></i>
+                    </button>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-400 hover:text-red-300 transition-colors" title="Logout">
+                            <i class="fas fa-sign-out-alt text-lg"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="p-6">
+                {% if messages %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        {% for message in messages %}
+                            showToast("{{ message|escapejs }}", "{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}");
+                        {% endfor %}
+                    });
+                </script>
+                {% endif %}
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Global Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+    
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const html = document.documentElement;
+            const isCurrentlyCollapsed = html.classList.contains('sidebar-collapsed');
+            
+            if (isCurrentlyCollapsed) {
+                html.classList.remove('sidebar-collapsed');
+                sidebar.classList.remove('collapsed');
+                localStorage.setItem('sidebarCollapsed', 'false');
+            } else {
+                html.classList.add('sidebar-collapsed');
+                sidebar.classList.add('collapsed');
+                localStorage.setItem('sidebarCollapsed', 'true');
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

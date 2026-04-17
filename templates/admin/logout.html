@@ -1,0 +1,18 @@
+{% extends "django_administration/base_site.html" %}
+{% load i18n %}
+
+{% block branding %}
+<h1 id="site-name">{% translate 'Chargebee administration' %}</h1>
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <p>{% translate "Logging out..." %}</p>
+    <script type="text/javascript">
+        // Redirect to the administration login page
+        window.location.href = "{% url 'admin:login' %}";
+    </script>
+</div>
+{% endblock %}

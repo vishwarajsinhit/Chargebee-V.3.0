@@ -1,0 +1,133 @@
+{% extends 'general/base.html' %}
+
+{% block title %}My Profile - Chargebee{% endblock %}
+{% block content %}
+
+<div class="mb-4 pb-2 border-b border-gray-300 page-header-sticky flex justify-between items-center">
+    <h2 class="text-xl font-bold"><i class="fas fa-user-circle mr-2"></i>My Profile</h2>
+</div>
+
+<div class="w-full pb-6">
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="max-h-[calc(100vh-220px)] overflow-y-auto space-y-6 pb-2 pr-2">
+            <!-- Personal Information Card -->
+            <div class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-gray-50 dark:bg-slate-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Personal Information</h3>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">First Name</label>
+                        {{ user_form.first_name }}
+                        {% if user_form.first_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ user_form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Last Name</label>
+                        {{ user_form.last_name }}
+                        {% if user_form.last_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ user_form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Email Address</label>
+                        {{ user_form.email }}
+                        {% if user_form.email.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ user_form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Phone Number</label>
+                        {{ profile_form.phone }}
+                        {% if profile_form.phone.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.phone.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Details Card -->
+            <div class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-gray-50 dark:bg-slate-900 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Company Details</h3>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Company Name</label>
+                        {{ profile_form.company_name }}
+                        {% if profile_form.company_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.company_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Company Type</label>
+                        {{ profile_form.company_type }}
+                        {% if profile_form.company_type.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.company_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Address Line 1</label>
+                        {{ profile_form.address1 }}
+                        {% if profile_form.address1.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.address1.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Address Line 2 (Optional)</label>
+                        {{ profile_form.address2 }}
+                        {% if profile_form.address2.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.address2.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Landmark</label>
+                        {{ profile_form.landmark }}
+                        {% if profile_form.landmark.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.landmark.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">City</label>
+                        {{ profile_form.city }}
+                        {% if profile_form.city.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">State / Province</label>
+                        {{ profile_form.state }}
+                        {% if profile_form.state.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">PIN / Zip Code</label>
+                        {{ profile_form.pincode }}
+                        {% if profile_form.pincode.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.pincode.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Country</label>
+                        {{ profile_form.country }}
+                        {% if profile_form.country.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ profile_form.country.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-4 mr-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-2"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

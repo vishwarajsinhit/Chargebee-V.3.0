@@ -1,0 +1,161 @@
+{% extends 'general/base.html' %}
+
+{% block content %}
+<h2 class="text-xl font-bold mb-4 pb-2 border-b border-gray-300 page-header-sticky"><i class="fas fa-chart-bar mr-2"></i>Business Reports</h2>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1">TOTAL GST COLLECTED</div>
+        <div class="text-2xl font-bold text-green-600">{{ total_gst_collected }}</div>
+        <div class="text-gray-500 text-xs mt-1">All time</div>
+    </div>
+    
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1">OUTSTANDING INVOICES</div>
+        <div class="text-2xl font-bold text-orange-600">{{ outstanding_invoices|length }}</div>
+        <div class="text-gray-500 text-xs mt-1">Unpaid bills</div>
+    </div>
+    
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1 uppercase text-ellipsis overflow-hidden whitespace-nowrap" title="TOP CUSTOMER">TOP CUSTOMER</div>
+        <div class="text-2xl font-bold text-ellipsis overflow-hidden whitespace-nowrap" style="max-width: 100%;" title="{% if top_customers %}{{ top_customers.0.customer__name }}{% else %}N/A{% endif %}">
+            {% if top_customers %}
+                {{ top_customers.0.customer__name }}
+            {% else %}
+                N/A
+            {% endif %}
+        </div>
+        <div class="text-gray-500 text-xs mt-1">Revenue leader</div>
+    </div>
+</div>
+
+
+<!-- Monthly Sales -->
+<div class="bg-white border border-gray-300 p-4 mb-4 rounded-xl shadow-sm">
+    <div class="font-bold text-sm mb-3 pb-2 border-b border-gray-200">Monthly Sales (Current Year)</div>
+    <table class="w-full text-xs">
+        <thead>
+            <tr class="text-gray-600 border-b border-gray-200">
+                <th class="text-left py-1">Month</th>
+                <th class="text-right py-1">Revenue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for month in monthly_sales %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-1.5">{{ month.month_name }}</td>
+                <td class="py-1.5 text-right font-semibold">{{ month.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Outstanding Invoices -->
+<div class="bg-white border border-gray-300 p-4 mb-4 rounded-xl shadow-sm">
+    <div class="flex justify-between items-center cursor-pointer" onclick="toggleOutstanding()">
+        <div class="font-bold text-sm">Outstanding Invoices</div>
+        <svg id="outstandingIcon" class="w-4 h-4 transition-transform" style="transform: rotate(180deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+    </div>
+    
+    <div id="outstandingPanel" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div class="pt-3 mt-3 border-t border-gray-200" style="max-height: 150px; overflow-y: auto;">
+            {% if outstanding_invoices %}
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-gray-600 border-b border-gray-200">
+                        <th class="text-left py-1">ID</th>
+                        <th class="text-left py-1">Customer</th>
+                        <th class="text-left py-1">Date</th>
+                        <th class="text-right py-1">Total</th>
+                        <th class="text-right py-1">Balance Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in outstanding_invoices %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-1.5">#{{ invoice.id }}</td>
+                        <td class="py-1.5">{{ invoice.customer.name }}</td>
+                        <td class="py-1.5">{{ invoice.date|date:"d/m/Y" }}</td>
+                        <td class="py-1.5 text-right">{{ invoice.total_amount }}</td>
+                        <td class="py-1.5 text-right font-bold text-orange-600">{{ invoice.balance_due }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center text-gray-500 py-4 text-sm">No outstanding invoices</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Top Customers -->
+<div class="bg-white border border-gray-300 p-4 mb-4 rounded-xl shadow-sm">
+    <div class="flex justify-between items-center cursor-pointer" onclick="toggleTopCustomers()">
+        <div class="font-bold text-sm">Top Customers by Revenue</div>
+        <svg id="customersIcon" class="w-4 h-4 transition-transform" style="transform: rotate(0deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+    </div>
+    
+    <div id="customersPanel" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div class="pt-3 mt-3 border-t border-gray-200" style="max-height: 150px; overflow-y: auto;">
+            {% if top_customers %}
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-gray-600 border-b border-gray-200">
+                        <th class="text-left py-1">Customer</th>
+                        <th class="text-right py-1">Invoices</th>
+                        <th class="text-right py-1">Total Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in top_customers %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-1.5 font-medium">{{ customer.customer__name }}</td>
+                        <td class="py-1.5 text-right">{{ customer.invoice_count }}</td>
+                        <td class="py-1.5 text-right font-bold">{{ customer.total_revenue }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-center text-gray-500 py-4 text-sm">No data available</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleOutstanding() {
+    const panel = document.getElementById('outstandingPanel');
+    const icon = document.getElementById('outstandingIcon');
+    
+    if (panel.style.maxHeight === '0px' || panel.style.maxHeight === '') {
+        panel.style.maxHeight = '300px';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        panel.style.maxHeight = '0px';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function toggleTopCustomers() {
+    const panel = document.getElementById('customersPanel');
+    const icon = document.getElementById('customersIcon');
+    
+    if (panel.style.maxHeight === '0px' || panel.style.maxHeight === '') {
+        panel.style.maxHeight = '300px';
+        icon.style.transform = 'rotate(180deg)';
+    } else {
+        panel.style.maxHeight = '0px';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,327 @@
+{% extends 'general/base.html' %}
+{% load static %}
+{% block title %}Inventory - Chargebee{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-300 page-header-sticky">
+    <h2 class="text-xl font-bold"><i class="fas fa-warehouse mr-2"></i>Inventory Dashboard</h2>
+    <div class="flex gap-2">
+        <button id="addBusinessProducts" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i>
+            <span>Add Basics</span>
+        </button>
+        <a href="{% url 'product_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span>Add Product</span>
+        </a>
+    </div>
+</div>
+
+<!-- Message Container -->
+<div id="messageContainer" class="mb-4 hidden"></div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-3 gap-3 mb-6">
+    <!-- Total Products -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1"><i class="fas fa-cubes mr-1"></i>TOTAL PRODUCTS</div>
+        <div class="text-2xl font-bold">{{ total_products }}</div>
+        <div class="text-gray-500 text-xs mt-1">All inventory items</div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1"><i class="fas fa-exclamation-triangle mr-1 text-yellow-500"></i>LOW STOCK ALERTS</div>
+        <div class="text-2xl font-bold text-yellow-600">{{ low_stock_count }}</div>
+        <div class="text-gray-500 text-xs mt-1">Items need attention</div>
+    </div>
+
+    <!-- Out of Stock -->
+    <div class="bg-white border border-gray-300 p-3 rounded-xl shadow-sm">
+        <div class="text-gray-600 text-xs mb-1"><i class="fas fa-times-circle mr-1 text-red-500"></i>OUT OF STOCK</div>
+        <div class="text-2xl font-bold text-red-600">{{ out_of_stock_count }}</div>
+        <div class="text-gray-500 text-xs mt-1">Critical items</div>
+    </div>
+</div>
+
+
+<!-- Low Stock Table (Full Width) -->
+<div class="bg-white border border-gray-300 p-4 rounded-xl shadow-sm">
+    <div class="font-bold text-sm mb-3"><i class="fas fa-exclamation-triangle text-yellow-600"></i> Items Needing Attention</div>
+            
+            {% if low_stock_products %}
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="text-gray-600 border-b border-gray-300 bg-gray-200">
+                            <th class="text-left px-3 py-2 font-semibold">Product</th>
+                            <th class="text-left px-3 py-2 font-semibold">Company</th>
+                            <th class="text-center px-3 py-2 font-semibold">Current Stock</th>
+                            <th class="text-center px-3 py-2 font-semibold">Threshold</th>
+                            <th class="text-right px-3 py-2 font-semibold">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products %}
+                        <tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="px-3 py-2">
+                                <div class="font-bold">{{ product.name }}</div>
+                                <div class="text-gray-500">ID: #{{ product.id }}</div>
+                            </td>
+                            <td class="px-3 py-2">{{ product.company.name|default:"-" }}</td>
+                            <td class="px-3 py-2 text-center">
+                                {% if product.stock <= 0 %}
+                                <span class="bg-red-100 text-red-800 px-1.5 py-0.5 text-xs font-bold">OUT</span>
+                                {% else %}
+                                <span class="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 text-xs font-bold">{{ product.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-3 py-2 text-center text-gray-600">{{ product.low_stock_threshold }}</td>
+                            <td class="px-3 py-2 text-right">
+                                <div class="action-btn-group">
+                                    <button onclick="openAdjustModal('{{ product.id }}', '{{ product.name }}', {{ product.stock }})" 
+                                            class="action-btn action-btn-adjust" title="Adjust Stock">
+                                        <i class="fas fa-boxes"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-gray-500 py-8 text-sm">
+                <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                <p>All stock levels are healthy!</p>
+            </div>
+            {% endif %}
+        </div>
+</div>
+
+<!-- Script for Add Business Products button -->
+<script>
+document.getElementById('addBusinessProducts').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.textContent;
+    const msgContainer = document.getElementById('messageContainer');
+    
+    // Get company type from Django template variable  
+    const selectedType = '{{ company.company_type|default:"" }}';
+    
+    // Validate selection
+    if (!selectedType) {
+        msgContainer.className = 'mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700';
+        msgContainer.textContent = 'Please set your Business Type in Company Settings first!';
+        msgContainer.classList.remove('hidden');
+        return;
+    }
+    
+    // Disable button and show loading
+    btn.disabled = true;
+    btn.textContent = 'Adding products...';
+    btn.classList.add('opacity-50');
+    
+    // Get CSRF token
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Prepare data
+    const formData = new URLSearchParams();
+    formData.append('business_type', selectedType);
+    
+    // Make AJAX request
+    fetch('{% url "add_business_products" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            msgContainer.className = 'mb-4 p-3 bg-green-100 border border-green-400 text-green-700';
+            msgContainer.textContent = data.message + ' Page will reload...';
+            msgContainer.classList.remove('hidden');
+            
+            // Reload page after 2 seconds
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            // Show error message
+            msgContainer.className = 'mb-4 p-3 bg-red-100 border border-red-400 text-red-700';
+            msgContainer.textContent = 'Error: ' + (data.error || 'Failed to add products');
+            msgContainer.classList.remove('hidden');
+            
+            // Re-enable button
+            btn.disabled = false;
+            btn.textContent = originalText;
+            btn.classList.remove('opacity-50');
+        }
+    })
+    .catch(error => {
+        // Show error message
+        msgContainer.className = 'mb-4 p-3 bg-red-100 border border-red-400 text-red-700';
+        msgContainer.textContent = 'Error: ' + error.message;
+        msgContainer.classList.remove('hidden');
+        
+        // Re-enable button
+        btn.disabled = false;
+        btn.textContent = originalText;
+        btn.classList.remove('opacity-50');
+    });
+});
+</script>
+
+<!-- Stock Adjustment Modal -->
+<div id="adjustModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white border border-gray-300 w-full max-w-md mx-4 rounded-xl shadow-lg overflow-hidden">
+        <form id="adjustForm" method="POST" action="">
+            {% csrf_token %}
+            <div class="px-4 py-3 border-b border-gray-300 bg-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-sm" id="modalTitle">Adjust Stock</h3>
+                <button type="button" onclick="closeAdjustModal()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Current Stock: <span id="currentStock" class="text-blue-600"></span></label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Adjustment Amount *</label>
+                    <input type="number" name="adjustment" min="1" class="w-full border border-gray-300 px-3 py-1.5 text-sm rounded-lg focus:outline-none focus:border-blue-500" required placeholder="e.g. 5">
+                </div>
+            </div>
+            
+            <div class="px-4 py-3 border-t border-gray-300 bg-gray-50 flex justify-end gap-2">
+                <button type="button" onclick="closeAdjustModal()" class="btn btn-outline">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span>Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Remove Damaged Products Modal -->
+<div id="damagedModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white border border-gray-300 w-full max-w-md mx-4 rounded-xl shadow-lg overflow-hidden">
+        <form id="damagedForm" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="reason" value="damaged">
+            <input type="hidden" name="adjustment" id="damagedAdjustmentValue">
+            <div class="px-4 py-3 border-b border-gray-300 bg-red-50 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-red-700" id="damagedModalTitle"><i class="fas fa-exclamation-triangle mr-1"></i> Remove Damaged Stock</h3>
+                <button type="button" onclick="closeDamagedModal()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
+            </div>
+            
+            <div class="p-4">
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Product: <span id="damagedProductName" class="text-gray-700"></span></label>
+                    <label class="block text-sm font-bold mb-1">Current Stock: <span id="damagedCurrentStock" class="text-blue-600"></span></label>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-sm font-bold mb-1">Damaged Quantity *</label>
+                    <input type="number" id="damagedQtyInput" min="1" class="w-full border border-red-300 px-3 py-1.5 text-sm rounded-lg focus:outline-none focus:border-red-500" required placeholder="Enter number of damaged items">
+                    <p class="text-xs text-red-500 mt-1">This quantity will be removed from stock</p>
+                </div>
+            </div>
+            
+            <div class="px-4 py-3 border-t border-gray-300 bg-gray-50 flex justify-end gap-2">
+                <button type="button" onclick="closeDamagedModal()" class="btn btn-outline">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Remove Damaged</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- Stock Adjustment Modal ---
+    const modal = document.getElementById('adjustModal');
+    const adjustForm = document.getElementById('adjustForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const currentStockSpan = document.getElementById('currentStock');
+    
+    function openAdjustModal(productId, productName, currentStock) {
+        adjustForm.action = `/inventory/adjust/${productId}/`;
+        modalTitle.textContent = `Adjust: ${productName}`;
+        currentStockSpan.textContent = currentStock;
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
+    
+    function closeAdjustModal() {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+        adjustForm.reset();
+    }
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeAdjustModal();
+        }
+    });
+
+    // --- Damaged Products Modal ---
+    const damagedModal = document.getElementById('damagedModal');
+    const damagedForm = document.getElementById('damagedForm');
+    const damagedProductName = document.getElementById('damagedProductName');
+    const damagedCurrentStock = document.getElementById('damagedCurrentStock');
+    const damagedQtyInput = document.getElementById('damagedQtyInput');
+    const damagedAdjustmentValue = document.getElementById('damagedAdjustmentValue');
+    
+    function openDamagedModal(productId, productName, currentStock) {
+        damagedForm.action = `/inventory/adjust/${productId}/`;
+        damagedProductName.textContent = productName;
+        damagedCurrentStock.textContent = currentStock;
+        damagedQtyInput.max = currentStock;
+        damagedQtyInput.value = '';
+        damagedModal.style.display = 'flex';
+        damagedModal.classList.remove('hidden');
+    }
+    
+    function closeDamagedModal() {
+        damagedModal.style.display = 'none';
+        damagedModal.classList.add('hidden');
+        damagedForm.reset();
+    }
+    
+    damagedModal.addEventListener('click', (e) => {
+        if (e.target === damagedModal) {
+            closeDamagedModal();
+        }
+    });
+    
+    // Negate the quantity before submission so it removes stock
+    damagedForm.addEventListener('submit', function(e) {
+        const qty = parseInt(damagedQtyInput.value) || 0;
+        if (qty <= 0) {
+            e.preventDefault();
+            showToast('Please enter a valid damaged quantity.', 'error');
+            return;
+        }
+        const currentStock = parseInt(damagedCurrentStock.textContent) || 0;
+        if (qty > currentStock) {
+            e.preventDefault();
+            showToast(`Cannot remove ${qty} items. Only ${currentStock} in stock.`, 'error');
+            return;
+        }
+        // Set the hidden adjustment field to negative value
+        damagedAdjustmentValue.value = -qty;
+    });
+</script>
+
+{% endblock %}

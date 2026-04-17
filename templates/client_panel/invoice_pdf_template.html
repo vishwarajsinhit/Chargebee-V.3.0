@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1cm;
+            @frame footer_frame {           /* Static Frame */
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 1cm;
+                margin-right: 1cm;
+                height: 1cm;
+            }
+        }
+        body { font-family: Helvetica, sans-serif; font-size: 10pt; color: #333; }
+        
+        /* Typography */
+        h1 { font-size: 18pt; color: #2c3e50; margin: 0; }
+        h2 { font-size: 10pt; color: #7f8c8d; text-transform: uppercase; margin: 0 0 5px 0; }
+        p { margin: 0 0 5px 0; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 5px; vertical-align: top; }
+        
+        /* Header */
+        .header-table td { padding: 0; }
+        .company-name { font-size: 18pt; font-weight: bold; color: #2c3e50; }
+        .invoice-title { font-size: 24pt; font-weight: bold; color: #2c3e50; text-align: right; text-transform: uppercase; margin-bottom: 5px; }
+        .sub-header { font-size: 9pt; color: #7f8c8d; line-height: 1.4; }
+        
+        .separator { border-bottom: 2px solid #2c3e50; margin: 15px 0; }
+        
+        /* Details Section */
+        .details-table { margin-top: 10px; }
+        .bill-to-header { font-size: 10pt; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .client-name { font-size: 11pt; font-weight: bold; color: #333; margin-bottom: 3px; }
+        
+        .meta-table td { padding: 3px; }
+        .meta-label { font-weight: bold; color: #555; text-align: right; }
+        .meta-value { text-align: right; }
+        
+        .status-paid { color: #27ae60; font-weight: bold; }
+        .status-unpaid { color: #e67e22; font-weight: bold; }
+        
+        /* Items Table */
+        .items-container { margin-top: 25px; }
+        .items-table { width: 100%; border: 1px solid #bdc3c7; }
+        .items-table th { 
+            background-color: #ecf0f1; 
+            border-bottom: 1px solid #bdc3c7; 
+            font-weight: bold; 
+            font-size: 9pt; 
+            text-align: left; 
+            padding: 8px 5px;
+            color: #2c3e50;
+        }
+        .items-table td { 
+            border-bottom: 1px solid #bdc3c7; 
+            font-size: 9pt; 
+            padding: 8px 5px;
+        }
+        .items-table tr:last-child td { border-bottom: none; }
+        
+        /* Summary & Footer Section */
+        .footer-section { margin-top: 25px; }
+        
+        .bank-details-box {
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 9pt;
+        }
+        .qr-code-container {
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .qr-code-img {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #eee;
+            padding: 5px;
+            background: #fff;
+        }
+
+        .bank-details-table {
+            width: 100%;
+        }
+        .bank-details-table td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+        .bank-label {
+            width: 70px;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .bank-value {
+            color: #333;
+        }
+        
+        .totals-table { width: 100%; }
+        .totals-table td { padding: 6px; }
+        .total-label { text-align: right; font-weight: bold; color: #555; }
+        .total-value { text-align: right; }
+        .grand-total-row td { 
+            background-color: #2c3e50; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 11pt; 
+            padding: 10px 6px;
+        }
+        
+
+        
+        /* Helper Classes */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-bold { font-weight: bold; }
+        .text-small { font-size: 8pt; }
+        .text-gray { color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td width="60%">
+                {% if company_logo_base64 %}
+                <img src="{{ company_logo_base64 }}" style="height: 70px; margin-bottom: 10px;">
+                {% endif %}
+                <div class="company-name">{{ company.name }}</div>
+                <div class="sub-header">
+                    {{ company.address|linebreaksbr }}<br>
+                    {% if company.email %}Email: {{ company.email }}<br>{% endif %}
+                    {% if company.phone %}Phone: {{ company.phone }}<br>{% endif %}
+                    {% if company.tax_id %}<div style="margin-top:5px; color:#333;"><strong>GSTIN/Tax ID: {{ company.tax_id }}</strong></div>{% endif %}
+                </div>
+            </td>
+            <td width="40%" class="text-right">
+                <div class="invoice-title">INVOICE</div>
+                <div style="font-size: 14pt; color: #555; margin-bottom: 15px;">#{{ invoice.id }}</div>
+                
+                {% if qr_code_base64 %}
+                <div class="qr-code-container">
+                    <img src="{{ qr_code_base64 }}" class="qr-code-img" alt="Invoice QR Code">
+                    <div style="font-size: 7pt; color: #7f8c8d; margin-top: 5px;">Scan to verify invoice</div>
+                </div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <div class="separator"></div>
+    
+    <!-- Billing Details -->
+    <table class="details-table">
+        <tr>
+            <td width="55%">
+                <div class="bill-to-header">Bill To</div>
+                <div class="client-name">{{ invoice.customer.name }}</div>
+                <div class="sub-header" style="color: #333;">
+                    {% if invoice.customer.address1 %}
+                        {{ invoice.customer.address1 }}<br>
+                        {% if invoice.customer.address2 %}{{ invoice.customer.address2 }}<br>{% endif %}
+                        {% if invoice.customer.landmark %}{{ invoice.customer.landmark }}<br>{% endif %}
+                        {% if invoice.customer.city or invoice.customer.state or invoice.customer.pincode %}
+                            {{ invoice.customer.city }}{% if invoice.customer.city and invoice.customer.state %}, {% endif %}{{ invoice.customer.state }} {{ invoice.customer.pincode }}<br>
+                        {% endif %}
+                        {% if invoice.customer.country and invoice.customer.country != 'India' %}{{ invoice.customer.country }}<br>{% endif %}
+                    {% else %}
+                        {{ invoice.customer.address|linebreaksbr }}<br>
+                    {% endif %}
+                    {% if invoice.customer.email %}Email: {{ invoice.customer.email }}<br>{% endif %}
+                    {% if invoice.customer.phone %}Phone: {{ invoice.customer.phone }}{% endif %}
+                </div>
+            </td>
+            <td width="45%">
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label">Invoice Date:</td>
+                        <td class="meta-value">{{ invoice.date|date:"d M Y" }}</td>
+                    </tr>
+                    {% if invoice.due_date %}
+                    <tr>
+                        <td class="meta-label">Due Date:</td>
+                        <td class="meta-value">{{ invoice.due_date|date:"d M Y" }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td class="meta-label">Status:</td>
+                        <td class="meta-value">
+                            {% if invoice.is_paid %}
+                            <span class="status-paid">PAID</span>
+                            {% else %}
+                            <span class="status-unpaid">UNPAID</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if invoice.dispatch_through %}
+                    <tr>
+                        <td class="meta-label">Dispatch:</td>
+                        <td class="meta-value">{{ invoice.dispatch_through }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if invoice.transactions.exists %}
+                    <tr>
+                        <td class="meta-label">Payment Mode:</td>
+                        <td class="meta-value">
+                            {% with last_transaction=invoice.transactions.last %}
+                                {{ last_transaction.get_payment_method_display }}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+    <!-- Items Table -->
+    <div class="items-container">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="30%">Item Description</th>
+                    <th width="8%" class="text-center">HSN</th>
+                    <th width="6%" class="text-center">Qty</th>
+                    <th width="13%" class="text-right">Rate</th>
+                    <th width="14%" class="text-right">Amount</th>
+                    <th width="12%" class="text-right">GST</th>
+                    <th width="17%" class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <span class="text-bold">{{ item.product.name }}</span>
+                    </td>
+                    <td class="text-center">{{ item.product.hsn_code }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.formatted_price }}</td>
+                    <td class="text-right">{{ item.formatted_subtotal }}</td>
+                    <td class="text-right">
+                        {{ item.formatted_gst_amount }}<br>
+                        <span class="text-small text-gray">({{ item.gst_rate }}%)</span>
+                    </td>
+                    <td class="text-right text-bold">{{ item.formatted_total_with_tax }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Totals Section (Immediately after items) -->
+    <table style="width: 100%; margin-top: 5px;">
+        <tr>
+            <td width="60%"></td>
+            <td width="40%">
+                <table class="totals-table">
+                    <tr>
+                        <td class="total-label">Subtotal Amount:</td>
+                        <td class="total-value text-bold">{{ formatted_total_amount }}</td>
+                    </tr>
+                    {% if invoice.amount_paid > 0 %}
+                    <tr>
+                        <td class="total-label" style="color: #27ae60;">Amount Paid:</td>
+                        <td class="total-value" style="color: #27ae60;">-{{ formatted_amount_paid }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="grand-total-row">
+                        <td class="text-right">{% if invoice.is_paid %}TOTAL PAID{% else %}BALANCE DUE{% endif %}:</td>
+                        <td class="text-right">{% if invoice.is_paid %}{{ formatted_total_amount }}{% else %}{{ formatted_balance_due }}{% endif %}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    
+    <!-- Footer Section -->
+    <table class="footer-section">
+        <tr>
+            <td width="55%">
+                <!-- Bank Info -->
+                {% if invoice.transactions.exists %}
+                    {% with last_transaction=invoice.transactions.last %}
+                        {% if last_transaction.payment_method != 'CASH' %}
+                        <div class="bill-to-header">Bank Details</div>
+                        <div class="bank-details-box">
+                            {% if invoice.bank_details %}
+                                {{ invoice.bank_details|linebreaksbr }}
+                            {% elif company.bank_name %}
+                                <table class="bank-details-table">
+                                    <tr>
+                                        <td class="bank-label">Bank:</td>
+                                        <td class="bank-value">{{ company.bank_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bank-label">A/C No:</td>
+                                        <td class="bank-value">{{ company.account_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bank-label">IFSC:</td>
+                                        <td class="bank-value">{{ company.ifsc_code }}</td>
+                                    </tr>
+                                    {% if company.swift_code %}
+                                    <tr>
+                                        <td class="bank-label">SWIFT:</td>
+                                        <td class="bank-value">{{ company.swift_code }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            {% else %}
+                                <div style="color: #95a5a6;">No bank details provided.</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                {% else %}
+                    <!-- Show bank details if invoice is not paid yet -->
+                    <div class="bill-to-header">Bank Details</div>
+                    <div class="bank-details-box">
+                        {% if invoice.bank_details %}
+                            {{ invoice.bank_details|linebreaksbr }}
+                        {% elif company.bank_name %}
+                            <table class="bank-details-table">
+                                <tr>
+                                    <td class="bank-label">Bank:</td>
+                                    <td class="bank-value">{{ company.bank_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="bank-label">A/C No:</td>
+                                    <td class="bank-value">{{ company.account_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="bank-label">IFSC:</td>
+                                    <td class="bank-value">{{ company.ifsc_code }}</td>
+                                </tr>
+                                {% if company.swift_code %}
+                                <tr>
+                                    <td class="bank-label">SWIFT:</td>
+                                    <td class="bank-value">{{ company.swift_code }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        {% else %}
+                            <div style="color: #95a5a6;">No bank details provided.</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <!-- Notes -->
+                {% if invoice.payment_note %}
+                <div style="margin-bottom: 10px;">
+                    <div class="text-bold text-small uppercase text-gray">Payment Note</div>
+                    <div class="text-small">{{ invoice.payment_note }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Terms -->
+                {% if invoice.terms_and_conditions %}
+                <div>
+                    <div class="text-bold text-small uppercase text-gray">Terms & Conditions</div>
+                    <div class="terms-box">{{ invoice.terms_and_conditions|linebreaksbr }}</div>
+                </div>
+                {% endif %}
+            </td>
+            
+            
+            <td width="5%"></td>
+            
+            <td width="40%">
+                <!-- Totals moved to above -->
+            </td>
+        </tr>
+    </table>
+
+    <!-- Footer Frame Content -->
+    <div id="footerContent" style="text-align: center; color: #95a5a6; font-size: 8pt; border-top: 1px solid #eee; padding-top: 5px;">
+        {{ company.footer_text|default:"Thank you for your business!" }}
+    </div>
+</body>
+</html>

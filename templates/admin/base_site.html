@@ -1,0 +1,95 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | Chargebee administration{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Chargebee administration</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{% load static %}
+
+<style>
+    /* Custom Theme: Match 'Chargebee' Admin Sidebar (Gray-800) */
+    #header {
+        background: #1f2937; /* Gray-800 */
+        color: #ffffff;
+    }
+    #branding h1 {
+        font-weight: bold !important;
+        font-size: 1.5rem !important;
+    }
+    #branding h1 a:link, #branding h1 a:visited {
+        color: #ffffff !important;
+        text-decoration: none;
+    }
+    div.breadcrumbs {
+        background: #1f2937; /* Gray-800 */
+        color: #9ca3af;
+    }
+    div.breadcrumbs a {
+        color: #d1d5db; /* Gray-300 */
+    }
+    div.breadcrumbs a:hover {
+        color: #ffffff;
+    }
+    .module caption, .module h2 {
+        background: #1f2937 !important; /* Gray-100 */
+        color: #ffffffff !important; /* Gray-800 */
+    }
+    a.section:link, a.section:visited {
+        color: #ffffffff; /* Gray-800 */
+    }
+    
+    /* Fix for Theme Toggle Button */
+    .theme-toggle {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .theme-toggle:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Fix Icon Colors */
+    .theme-toggle svg {
+        height: 1.5rem;
+        width: 1.5rem;
+    }
+    .theme-toggle .theme-icon-when-light {
+        color: #1f2937 !important; /* Sun Yellow */
+    }
+    .theme-toggle .theme-icon-when-dark,
+    .theme-toggle .theme-icon-when-auto {
+        color: #1f2937 !important; /* Moon/Auto Gray-300 */
+    }
+    
+    /* Login Button Styling */
+    .login .submit-row input {
+        background-color: #1f2937 !important;
+        border: none !important;
+        color: #ffffff !important;
+        padding: 10px 20px !important;
+        border-radius: 4px !important;
+        cursor: pointer !important;
+    }
+    .login .submit-row input:hover {
+        background-color: #374151 !important;
+    }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{% load static %}
+
+{% endblock %}
+
+{% block nav-sidebar %}
+{% load i18n %}
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  {% include 'admin/app_list.html' with app_list=available_apps show_changelinks=False %}
+</nav>
+{% endblock %}
